@@ -32,3 +32,54 @@ Jika Wazuh Agent berhasil terinstal dan berjalan maka kita bisa kembali ke web d
 
 
 #### Buat/mencari dan implementasikan minimal 5 custom rules/custom alert pada agent kalian. Jenis rules bebas dan dapat menyesuaikan kreativitas serta konteks keamanan masing-masing. Maksimal rules tidak dibatasi, lebih banyak lebih baik.
+```
+<group name="local,syslog,sshd,custom,journald">
+
+        <!--
+                Dec 10 01:02:02 host sshd[1234]: Failed none for root from 1.1.1.1 port 1066 ssh2
+        -->
+        <rule id="100001" level="5">
+                <if_sid>5716</if_sid>
+                <srcip>1.1.1.1</srcip>
+                <description>sshd: authentication failed from IP 1.1.1.1.</description>
+                <group>authentication_failed,pci_dss_10.2.4,pci_dss_10.2.5,</group>
+        </rule>
+
+        <rule id="110002" level="5">
+                <if_sid>5715</if_sid>
+                <if_group>syslog</if_group>
+                <match>azureuser</match>
+                <description>Successful SSH login as azureuser.</description>
+                <mitre><id>T1021</id></mitre>
+        </rule>
+
+        <rule id="110003" level="10">
+                <if_group>syslog</if_group>
+                <match>sudo:</match>
+                <description>Privilege escalation activity: sudo command executed (check user and command).</description>
+                <mitre><id>T1548</id></mitre>
+        </rule>
+
+        <rule id="110004" level="9">
+                <if_group>syslog</if_group>
+                <match>session opened for user root</match>
+                <description>Privilege escalation activity: session opened for user root (possible su/sudo).</description>
+                <mitre><id>T1548</id></mitre>
+        </rule>
+
+        <rule id="110006" level="12">
+                <if_sid>2504</if_sid>
+                <if_group>syslog</if_group>
+                <match>ROOT LOGIN REFUSED</match>
+                <description>SSH failed attempt using root account.</description>
+                <mitre><id>T1110</id></mitre>
+        </rule>
+
+        <rule id="110007" level="12">
+                <if_group>syslog</if_group>
+                <regex>sshd\p\d+\p\p\sAccepted\p \w+\p for root\p from \d+\.\d+\.\d+\.\d+</regex>
+                <description>SSH accepted login as root (should be disabled).</description>
+                <mitre><id>T1110</id></mitre>
+        </rule>
+</group>
+```
